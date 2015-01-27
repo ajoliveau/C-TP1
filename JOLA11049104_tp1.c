@@ -3,6 +3,8 @@
 #include <string.h>
 
 void lireMessageEntree(char**, int);
+int decrypterMessage(char*, char**, int);
+int encrypterMessage(char*, char**, int);
 
 int main(int argc, char* argv[])
 {
@@ -10,7 +12,11 @@ int main(int argc, char* argv[])
 
 	int modeUtilisation = 0; // 1 = encryption, 2 = décryption
 	int tailleEncodage = 0;
-	char* message;
+
+	char* messageEntree;
+	char* messageTraite;
+
+    int resultat = 0;
 
 	int i;
 
@@ -43,13 +49,57 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "Erreur dans %s : Taille d'encodage non spécifiée\n", argv[0]);
 		exit(2);
 	}
+	if (tailleEncodage != 5 && tailleEncodage != 7 && tailleEncodage != 8) {
+        fprintf(stderr, "Erreur dans %s : Taille d'encodage incorrecte (5 ou 7 ou 8 seulement)\n", argv[0]);
+		exit(3);
+	}
 
-    lireMessageEntree(&message, TAILLE_BLOC);
-    printf("%s\n", message);
+    lireMessageEntree(&messageEntree, TAILLE_BLOC);
+
+
+
+    if (modeUtilisation == 1) {
+        resultat = encrypterMessage(messageEntree, &messageTraite, tailleEncodage);
+    } else {
+        resultat = decrypterMessage(messageEntree, &messageTraite, tailleEncodage);
+    }
+
+    printf("%d\n", resultat);
+
 
 	return 0;
 }
 
+
+int encrypterMessage(char* messageEntree, char** messageTraite, int tailleEncodage) {
+    return 0;
+}
+
+int decrypterMessage(char* messageEntree, char** messageTraite, int tailleEncodage) {
+    int i;
+    int j=0;
+
+    for(i=0;i<strlen(messageEntree);i++) {
+        if (messageEntree[i] >= 'a' && messageEntree[i] <= 'z') {
+            messageEntree[j] = '0';
+            j++;
+        }
+        else if (messageEntree[i] >= 'A' && messageEntree[i] <= 'Z') {
+            messageEntree[j] = '1';
+            j++;
+        }
+        else if (messageEntree[i] != ' ') {
+            return 2;
+        }
+    }
+    messageEntree[j] = '\0';
+
+    printf("%s\n", messageEntree);
+    if ((strlen(messageEntree) % tailleEncodage) != 0) {
+        return 1;
+    }
+;
+}
 
 void lireMessageEntree(char** messageARemplir, int tailleBloc) {
     int tailleMessageMax = tailleBloc;
@@ -69,6 +119,5 @@ void lireMessageEntree(char** messageARemplir, int tailleBloc) {
     }
 
     message[tailleMessageActuel] = '\0';
-    printf("%s\n", message);
-    messageARemplir = &message;
+    *messageARemplir = message;
 }
