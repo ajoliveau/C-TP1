@@ -1,16 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-int main(int argc, char *argv[])
+void lireMessageEntree(char**, int);
+
+int main(int argc, char* argv[])
 {
+    const TAILLE_BLOC = 128;
+
 	int modeUtilisation = 0; // 1 = encryption, 2 = décryption
 	int tailleEncodage = 0;
-	char *message;
+	char* message;
+
 	int i;
 
 
 
-	// Lecture et vérification des arguments
+	// Lecture et vérification des argumentsa
 	if (argc != 3) {
 		fprintf(stderr, "Erreur dans %s : Nombre d'arguments invalides\n", argv[0]);
 		exit(1);
@@ -22,7 +28,7 @@ int main(int argc, char *argv[])
 				case 'e' :
 					modeUtilisation = 1;
 					break;
-				case 'd' :					
+				case 'd' :
 					modeUtilisation = 2;
 					break;
 				case 't' :
@@ -38,15 +44,31 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 
-
-	//scanf("%s", message);
-
-	//printf("Message : %s \n", message);
-
-
-
-
-
+    lireMessageEntree(&message, TAILLE_BLOC);
+    printf("%s\n", message);
 
 	return 0;
+}
+
+
+void lireMessageEntree(char** messageARemplir, int tailleBloc) {
+    int tailleMessageMax = tailleBloc;
+    int tailleMessageActuel = 0;
+    char carLu = '\n';
+    char* message = malloc(tailleBloc);
+
+
+    while ((carLu = getchar()) != '\n') {
+        message[tailleMessageActuel] = (char) carLu;
+        tailleMessageActuel++;
+
+        if (tailleMessageActuel == tailleMessageMax) {
+            tailleMessageMax += tailleBloc;
+            message = realloc(message, tailleMessageMax);
+        }
+    }
+
+    message[tailleMessageActuel] = '\0';
+    printf("%s\n", message);
+    messageARemplir = &message;
 }
