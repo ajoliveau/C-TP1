@@ -2,15 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define TAILLE_BLOC 128
+#define CHAINE_CRYPTAGE "to be or not to be that is the question"
+
 int decrypterMessage(char*, char**, int);
 int encrypterMessage(char*, char**, int);
-void lireMessageEntree(char**, int);
-char convertirBinaireVersASCII (char*, int);
+void lireMessageEntree(char**);
+int convertirBinaireVersASCII (char*, int);
 int convertirBinaireVersDecimal(char*);
 
 int main(int argc, char* argv[])
 {
-    const TAILLE_BLOC = 128;
 
 	int modeUtilisation = 0; // 1 = encryption, 2 = décryption
 	int tailleEncodage = 0;
@@ -22,12 +24,7 @@ int main(int argc, char* argv[])
 
 	int i;
 
-    printf("Conversion de : 111010 = %d\n", convertirBinaireVersDecimal("111010"));
-    printf("Conversion de : 101 = %d\n", convertirBinaireVersDecimal("101"));
-    printf("Conversion de : 1101101 = %d\n", convertirBinaireVersDecimal("1101101"));
-    printf("Conversion de : 10 = %d\n", convertirBinaireVersDecimal("10"));
 
-    return 0;
 
 	// Lecture et vérification des argumentsa
 	if (argc != 3) {
@@ -61,7 +58,7 @@ int main(int argc, char* argv[])
 		exit(3);
 	}
 
-    lireMessageEntree(&messageEntree, TAILLE_BLOC);
+    lireMessageEntree(&messageEntree);
 
 
 
@@ -71,7 +68,18 @@ int main(int argc, char* argv[])
         resultat = decrypterMessage(messageEntree, &messageTraite, tailleEncodage);
     }
 
-    //printf("%d\n", resultat);
+    if (resultat == 1) {
+        fprintf(stderr, "Erreur dans %s : Caractère non autorisé dans le message \n", argv[0]);
+    }
+    else if (resultat == 2) {
+        fprintf(stderr, "Erreur dans %s : La taille du message ne correpond pas à l'encodage choisi \n", argv[0]);
+    }
+    else if (resultat == 3) {
+        fprintf(stderr, "Erreur dans %s : L'encodage n'est pas correct pour ce message \n", argv[0]);
+    }
+    else {
+        printf("%s\n", messageTraite);
+    }
 
 
 	return 0;
@@ -86,6 +94,7 @@ int decrypterMessage(char* messageEntree, char** messageTraite, int tailleEncoda
     int i;
     int j=0;
     int tailleMessageARenvoyer;
+    int codeCaractereAscii;
     char codeBinaire[5];
     char* messageARenvoyer;
 
@@ -98,15 +107,14 @@ int decrypterMessage(char* messageEntree, char** messageTraite, int tailleEncoda
             messageEntree[j] = '1';
             j++;
         }
-        else if (messageEntree[i] != ' ') {
-            return 2;
+        else if (messageEntree[i] != ' ' && messageEntree[i]!= '\n') {
+            return 1;
         }
     }
     messageEntree[j] = '\0';
 
-    printf("%s\n", messageEntree);
     if ((strlen(messageEntree) % tailleEncodage) != 0) {
-        return 1;
+        return 2;
     }
 
     tailleMessageARenvoyer = strlen(messageEntree)/tailleEncodage;
@@ -119,24 +127,25 @@ int decrypterMessage(char* messageEntree, char** messageTraite, int tailleEncoda
     for(i=0; i < tailleMessageARenvoyer;i++) {
         strncpy (codeBinaire, messageEntree, tailleEncodage);
         codeBinaire[5]= '\0';
-        messageARenvoyer[i] = convertirBinaireVersASCII(codeBinaire, tailleEncodage);
+        codeCaractereAscii = convertirBinaireVersASCII(codeBinaire, tailleEncodage);
+        if (codeCaractereAscii == -1)
+            return 3;
+        messageARenvoyer[i] = (char) codeCaractereAscii;
         messageEntree += tailleEncodage;
     }
     messageARenvoyer[i] = '\0';
-
-    printf("%s\n", messageARenvoyer);
-
+    *messageTraite = messageARenvoyer;
 
     return 0;
 
     
 }
 
-void lireMessageEntree(char** messageARemplir, int tailleBloc) {
-    int tailleMessageMax = tailleBloc;
+void lireMessageEntree(char** messageARemplir) {
+    int tailleMessageMax = TAILLE_BLOC;
     int tailleMessageActuel = 0;
     char carLu = '\n';
-    char* message = malloc(tailleBloc);
+    char* message = malloc(TAILLE_BLOC);
 
 
     while ((carLu = getchar()) != '\n') {
@@ -144,7 +153,7 @@ void lireMessageEntree(char** messageARemplir, int tailleBloc) {
         tailleMessageActuel++;
 
         if (tailleMessageActuel == tailleMessageMax) {
-            tailleMessageMax += tailleBloc;
+            tailleMessageMax += TAILLE_BLOC;
             message = realloc(message, tailleMessageMax);
         }
     }
@@ -153,9 +162,20 @@ void lireMessageEntree(char** messageARemplir, int tailleBloc) {
     *messageARemplir = message;
 }
 
-char convertirBinaireVersASCII (char* codeBinaire, int tailleEncodage) {
+int convertirBinaireVersASCII (char* codeBinaire, int tailleEncodage) {
+    int valeurAscii;
+    valeurAscii = convertirBinaireVersDecimal(codeBinaire);
+
+    if (valeurAscii == 0) 
+        return 32;
     
-    return 'A';
+    if(tailleEncodage == 5) {
+        if (valeurAscii>26)
+            return -1 ;
+        return valeurAscii+96;
+    }
+
+    return valeurAscii;    
 }
 
 int convertirBinaireVersDecimal(char* codeBinaire) {
