@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-void lireMessageEntree(char**, int);
 int decrypterMessage(char*, char**, int);
 int encrypterMessage(char*, char**, int);
+void lireMessageEntree(char**, int);
+char convertirBinaireVersASCII (char*, int);
+int convertirBinaireVersDecimal(char*);
 
 int main(int argc, char* argv[])
 {
@@ -20,7 +22,12 @@ int main(int argc, char* argv[])
 
 	int i;
 
+    printf("Conversion de : 111010 = %d\n", convertirBinaireVersDecimal("111010"));
+    printf("Conversion de : 101 = %d\n", convertirBinaireVersDecimal("101"));
+    printf("Conversion de : 1101101 = %d\n", convertirBinaireVersDecimal("1101101"));
+    printf("Conversion de : 10 = %d\n", convertirBinaireVersDecimal("10"));
 
+    return 0;
 
 	// Lecture et vérification des argumentsa
 	if (argc != 3) {
@@ -64,7 +71,7 @@ int main(int argc, char* argv[])
         resultat = decrypterMessage(messageEntree, &messageTraite, tailleEncodage);
     }
 
-    printf("%d\n", resultat);
+    //printf("%d\n", resultat);
 
 
 	return 0;
@@ -78,6 +85,9 @@ int encrypterMessage(char* messageEntree, char** messageTraite, int tailleEncoda
 int decrypterMessage(char* messageEntree, char** messageTraite, int tailleEncodage) {
     int i;
     int j=0;
+    int tailleMessageARenvoyer;
+    char codeBinaire[5];
+    char* messageARenvoyer;
 
     for(i=0;i<strlen(messageEntree);i++) {
         if (messageEntree[i] >= 'a' && messageEntree[i] <= 'z') {
@@ -98,7 +108,28 @@ int decrypterMessage(char* messageEntree, char** messageTraite, int tailleEncoda
     if ((strlen(messageEntree) % tailleEncodage) != 0) {
         return 1;
     }
-;
+
+    tailleMessageARenvoyer = strlen(messageEntree)/tailleEncodage;
+
+
+    messageARenvoyer = malloc(tailleMessageARenvoyer*sizeof(char) + 1);
+    messageARenvoyer[1] = 'a';
+    messageARenvoyer[2] = '\0';
+
+    for(i=0; i < tailleMessageARenvoyer;i++) {
+        strncpy (codeBinaire, messageEntree, tailleEncodage);
+        codeBinaire[5]= '\0';
+        messageARenvoyer[i] = convertirBinaireVersASCII(codeBinaire, tailleEncodage);
+        messageEntree += tailleEncodage;
+    }
+    messageARenvoyer[i] = '\0';
+
+    printf("%s\n", messageARenvoyer);
+
+
+    return 0;
+
+    
 }
 
 void lireMessageEntree(char** messageARemplir, int tailleBloc) {
@@ -120,4 +151,25 @@ void lireMessageEntree(char** messageARemplir, int tailleBloc) {
 
     message[tailleMessageActuel] = '\0';
     *messageARemplir = message;
+}
+
+char convertirBinaireVersASCII (char* codeBinaire, int tailleEncodage) {
+    
+    return 'A';
+}
+
+int convertirBinaireVersDecimal(char* codeBinaire) {
+    int valeurTotale = 0;
+    int i;
+    int puissanceDeDeux = 1;
+
+
+    for (i = (strlen(codeBinaire) - 1); i>=0; i--) {
+        if (codeBinaire[i] == '1') {
+            valeurTotale += puissanceDeDeux;
+        }
+        puissanceDeDeux *= 2;
+    }
+
+    return valeurTotale;
 }
