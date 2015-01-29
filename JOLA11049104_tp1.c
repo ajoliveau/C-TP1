@@ -10,6 +10,8 @@ int encrypterMessage(char*, char**, int);
 void lireMessageEntree(char**);
 int convertirBinaireVersASCII (char*, int);
 int convertirBinaireVersDecimal(char*);
+int convertirCharVersBinaire(char, int**, int);
+int convertirEntierVersBinaire(int, int**, int);
 
 int main(int argc, char* argv[])
 {
@@ -23,8 +25,6 @@ int main(int argc, char* argv[])
     int resultat = 0;
 
 	int i;
-
-
 
 	// Lecture et vérification des argumentsa
 	if (argc != 3) {
@@ -67,7 +67,6 @@ int main(int argc, char* argv[])
     } else {
         resultat = decrypterMessage(messageEntree, &messageTraite, tailleEncodage);
     }
-
     if (resultat == 1) {
         fprintf(stderr, "Erreur dans %s : Caractère non autorisé dans le message \n", argv[0]);
     }
@@ -78,7 +77,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Erreur dans %s : L'encodage n'est pas correct pour ce message \n", argv[0]);
     }
     else {
-        printf("%s\n", messageTraite);
+        //printf("%s\n", messageTraite);
     }
 
 
@@ -87,6 +86,36 @@ int main(int argc, char* argv[])
 
 
 int encrypterMessage(char* messageEntree, char** messageTraite, int tailleEncodage) {
+    const int TAILLE_CARAC_BINAIRE = tailleEncodage*sizeof(int);
+    int i;
+    int j=0;
+    int* messageConverti = malloc(strlen(messageEntree)*TAILLE_CARAC_BINAIRE); // message en binaire qui va être retourné
+    int* caractereConverti = malloc(TAILLE_CARAC_BINAIRE); // transcription binaire d'un caractère du message d'entré
+    char* messageTraiteComplet = malloc(strlen(messageEntree)*sizeof(char));
+
+
+    for (i=0; i<strlen(messageEntree);i++) {
+        convertirCharVersBinaire(messageEntree[i], &caractereConverti, tailleEncodage);
+        memcpy(messageConverti+j, caractereConverti, TAILLE_CARAC_BINAIRE);      
+        j += 5;
+    }
+
+    i=0;
+    j=0;
+    while(i<TAILLE_CARAC_BINAIRE*strlen(messageEntree)) {
+        if (CHAINE_CRYPTAGE[j] == '\n')            
+            j=0;
+        else if (CHAINE_CRYPTAGE[j] == ' ')
+            j++;
+        
+        if (messageConverti[i] == 1) {
+            messageTraiteComplet[i] = 
+        }
+
+    }
+
+
+
     return 0;
 }
 
@@ -193,3 +222,54 @@ int convertirBinaireVersDecimal(char* codeBinaire) {
 
     return valeurTotale;
 }
+
+int convertirCharVersBinaire(char caractereAConvertir, int** binaireRetour, int tailleEncodage) {
+    int entierACoder;
+    int* caractereConverti;
+
+    if (caractereAConvertir == ' ') 
+        entierACoder = 0;
+    else {
+        switch (tailleEncodage) {
+            case 5:
+                if (caractereAConvertir < 'a' || caractereAConvertir > 'z') 
+                    return 1; // Erreur : type d'encodage pas adapté
+                
+                else 
+                    entierACoder = ((int) caractereAConvertir) - 96;
+                break;
+            case 7:
+                if ((int) caractereAConvertir > 127)
+                    return 1; // Erreur : type d'encodage pas adapté
+                else
+                    entierACoder = (int) caractereAConvertir;
+                break;
+            case 8:
+                entierACoder = (int) caractereAConvertir;
+                break;
+            default:
+                return 2; //Erreur : type d'encodage n'existe pas
+        }
+    }
+
+    convertirEntierVersBinaire(entierACoder, &caractereConverti, tailleEncodage);
+
+    *binaireRetour = caractereConverti;
+
+    return 0; // Pas d'erreur
+}
+
+int convertirEntierVersBinaire(int entierACoder, int** binaireRetour, int tailleEncodage) {
+    int i;
+    int *retour = malloc(tailleEncodage*sizeof(int));
+    for (i=tailleEncodage-1;i>=0;i--) {
+        retour[i] = entierACoder % 2;
+        entierACoder = entierACoder / 2;
+    }
+
+    *binaireRetour = retour; 
+    return 0;
+} 
+
+
+
