@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define TAILLE_BLOC 128
-#define CHAINE_CRYPTAGE "to be or not to be that is the question"
+#define CHAINE_CRYPTAGE "to be or not to be that is the question "
 
 int decrypterMessage(char*, char**, int);
 int encrypterMessage(char*, char**, int);
@@ -12,6 +12,8 @@ int convertirBinaireVersASCII (char*, int);
 int convertirBinaireVersDecimal(char*);
 int convertirCharVersBinaire(char, int**, int);
 int convertirEntierVersBinaire(int, int**, int);
+int calculerNombreEspaces(char*, int);
+
 
 int main(int argc, char* argv[])
 {
@@ -77,7 +79,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Erreur dans %s : L'encodage n'est pas correct pour ce message \n", argv[0]);
     }
     else {
-        //printf("%s\n", messageTraite);
+        printf("%s\n", messageTraite);
     }
 
 
@@ -89,33 +91,48 @@ int encrypterMessage(char* messageEntree, char** messageTraite, int tailleEncoda
     const int TAILLE_CARAC_BINAIRE = tailleEncodage*sizeof(int);
     int i;
     int j=0;
+    int chaineOffset=0;
     int* messageConverti = malloc(strlen(messageEntree)*TAILLE_CARAC_BINAIRE); // message en binaire qui va être retourné
     int* caractereConverti = malloc(TAILLE_CARAC_BINAIRE); // transcription binaire d'un caractère du message d'entré
-    char* messageTraiteComplet = malloc(strlen(messageEntree)*sizeof(char));
+    
+    int nbEspaces = calculerNombreEspaces(CHAINE_CRYPTAGE, strlen(messageEntree)*tailleEncodage);
+    char* messageTraiteComplet = malloc((tailleEncodage*strlen(messageEntree) + nbEspaces+ 1)*sizeof(char));
 
-
+    printf("%d\n", nbEspaces );
+    printf("%d\n", (tailleEncodage*strlen(messageEntree) + nbEspaces+ 1) );
+    
     for (i=0; i<strlen(messageEntree);i++) {
         convertirCharVersBinaire(messageEntree[i], &caractereConverti, tailleEncodage);
         memcpy(messageConverti+j, caractereConverti, TAILLE_CARAC_BINAIRE);      
-        j += 5;
+        j += tailleEncodage;
     }
+
 
     i=0;
     j=0;
-    while(i<TAILLE_CARAC_BINAIRE*strlen(messageEntree)) {
-        if (CHAINE_CRYPTAGE[j] == '\n')            
-            j=0;
-        else if (CHAINE_CRYPTAGE[j] == ' ')
-            j++;
-        
-        if (messageConverti[i] == 1) {
-            messageTraiteComplet[i] = 
-        }
 
+    while(i<tailleEncodage*strlen(messageEntree)) {
+    	if(CHAINE_CRYPTAGE[j-chaineOffset] == ' ') {
+    		messageTraiteComplet[j] = ' ';
+    		j++;
+    	}
+    	else if (CHAINE_CRYPTAGE[j-chaineOffset] == '\0') {
+			chaineOffset += j;
+		}
+		else {
+			if(messageConverti[i] == 1) {
+    			messageTraiteComplet[j] = CHAINE_CRYPTAGE[j - chaineOffset] - 32;
+    		}
+    		else if(messageConverti[i] == 0) {
+    			messageTraiteComplet[j] = CHAINE_CRYPTAGE[j - chaineOffset];
+    		}
+    		i++;
+    		j++;
+		}
     }
 
-
-
+    messageTraiteComplet[j] = '\0';
+    *messageTraite = messageTraiteComplet;
     return 0;
 }
 
@@ -270,6 +287,26 @@ int convertirEntierVersBinaire(int entierACoder, int** binaireRetour, int taille
     *binaireRetour = retour; 
     return 0;
 } 
+
+int calculerNombreEspaces(char* chaine, int taille) {
+	int i=0;
+	int j=0;
+	int chaineOffset = 0;
+	int nbEspaces=0;
+
+	while(i<taille) {
+		if (chaine[i-chaineOffset + nbEspaces] == '\0') {
+			chaineOffset+= i;
+		}
+		if (chaine[i - chaineOffset + nbEspaces] == ' ') {
+			nbEspaces++;
+		}
+
+		i++;
+	}
+	return nbEspaces;
+}
+
 
 
 
